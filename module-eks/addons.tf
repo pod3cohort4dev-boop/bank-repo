@@ -45,10 +45,8 @@ resource "helm_release" "cert_manager" {
   namespace  = "cert-manager"
   create_namespace = true
   
-  set {
-    name  = "installCRDs"
-    value = "true"
-  }
+  # Use values file instead of set block
+  values = [file("${path.module}/cert-manager-values.yaml")]
   
   depends_on = [helm_release.nginx_ingress]
 }
