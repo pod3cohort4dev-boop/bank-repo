@@ -1,7 +1,7 @@
 terraform {
   backend "s3" {
-    bucket = "pod3-terraform-state-pod3-terraform-state "  # Your new bucket name
-    key    = "terraform.tfstate"              # Simplified path
+    bucket = "pod3-terraform-state"
+    key    = "terraform.tfstate"
     region = "us-east-1"
   }
 }
