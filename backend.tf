@@ -1,7 +1,7 @@
 terraform {
   backend "s3" {
-    bucket = "digitalwitchngbucketcloud1"
-    key    = "digitalwitchng/prodution/terraform.tfstate"
-    region = "us-west-1"
+    bucket = "pod3-terraform-state-pod3-terraform-state "  # Your new bucket name
+    key    = "terraform.tfstate"              # Simplified path
+    region = "us-east-1"
   }
 }
