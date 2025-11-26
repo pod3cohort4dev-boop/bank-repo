@@ -1,1 +1,4 @@
 .env
+GITHUB_PAT=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
+REPO=pod3cohort4dev-boop/bank-repo-deploy
+RUNNER_NAME=docker-runner
