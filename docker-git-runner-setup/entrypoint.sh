@@ -12,6 +12,7 @@ TOKEN_URL="https://api.github.com/repos/${REPO}/actions/runners/registration-tok
 echo "Requesting registration token for $REPO..."
 RUNNER_TOKEN=$(curl -s -X POST \
   -H "Authorization: token ${GITHUB_PAT}" \
+  -H "Accept: application/vnd.github.v3+json" \
   "${TOKEN_URL}" | jq -r .token)
 
 echo "Registering runner: $RUNNER_NAME"
@@ -19,7 +20,7 @@ echo "Registering runner: $RUNNER_NAME"
   --url "https://github.com/${REPO}" \
   --token "${RUNNER_TOKEN}" \
   --name "${RUNNER_NAME}" \
-  --labels self-hosted,docker,terraform \
+  --labels "self-hosted,docker,terraform" \
   --work _work \
   --replace
 
