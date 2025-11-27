@@ -63,7 +63,7 @@ variable "capacity_type" {
 variable "eks_version" {
   description = "EKS cluster version"
   type        = string
-  default     = "1.32"
+  default     = "1.30"
 }
 variable "ami_type" {
   description = "AMI type for the EKS node group"
@@ -107,7 +107,7 @@ variable "namecheap_username" {
 variable "namecheap_client_ip" {
   description = "Client IP for Namecheap API access"
   type        = string
-  default     = "3.101.24.8" # Replace with your actual client IP
+  default     = "52.91.217.163" # Replace with your actual client IP
 }
 
 #===========
