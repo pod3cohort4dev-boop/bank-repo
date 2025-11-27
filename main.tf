@@ -7,11 +7,9 @@ module "vpc-deployment" {
     countsub = var.countsub
     create_subnet = var.create_subnet
     create_elastic_ip = var.create_elastic_ip
-  
 }
 
-#creating an EKS cluster using Terraform
-# and deploying it in the VPC created above
+# Creating an EKS cluster using Terraform
 module "eks-deployment" {
     source = "./module-eks"
     
@@ -31,18 +29,19 @@ module "eks-deployment" {
     repository_name = var.repository_name
     domain-name = var.domain-name
     email = var.email
-  
 }
 
-# module "namecheap-deployment" {
+# COMPLETELY REMOVE OR COMMENT OUT THE NAMECHEAP MODULE
+/*
+module "namecheap-deployment" {
     source = "./module-dns"
     environment = var.environment
     domain-name = var.domain-name
     nginx_lb_ip = module.eks-deployment.nginx_lb_ip
     nginx_ingress_load_balancer_hostname = module.eks-deployment.nginx_ingress_load_balancer_hostname
     nginx_ingress_lb_dns = module.eks-deployment.nginx_ingress_lb_dns
-  
 }
+*/
 
 module "rds-mysql-deployment" {
     source = "./module-database"
