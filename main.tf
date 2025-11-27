@@ -34,7 +34,7 @@ module "eks-deployment" {
   
 }
 
-module "namecheap-deployment" {
+# module "namecheap-deployment" {
     source = "./module-dns"
     environment = var.environment
     domain-name = var.domain-name
