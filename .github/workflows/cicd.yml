@@ -18,6 +18,15 @@ jobs:
       - name: Checkout repository.
         uses: actions/checkout@v2
 
+      - name: Clean DNS State
+        run: |
+          terraform init
+          terraform state rm 'module.namecheap-deployment.aws_route53_record.name' || true
+          terraform state rm 'module.namecheap-deployment.aws_route53_record.name1' || true
+          terraform state rm 'module.namecheap-deployment.aws_route53_record.name2' || true
+          terraform state rm 'module.namecheap-deployment.aws_route53_record.app' || true
+          terraform state rm 'module.namecheap-deployment.aws_route53_zone.r53_zone' || true
+
       - name: Setup GitHub OIDC
         run: | 
            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
