@@ -16,6 +16,15 @@ terraform {
   }
 }
 
+terraform {
+  required_providers {
+    time = {
+      source  = "hashicorp/time"
+      version = "~> 0.9.0"
+    }
+  }
+}
+
 provider "namecheap" {
   user_name = var.namecheap_username
   api_user = var.namecheap_api_user

@@ -29,11 +29,22 @@ resource "helm_release" "nginx_ingress" {
   depends_on = [aws_eks_node_group.eks_node_group]
 }
 
+# Add delay for load balancer creation
+resource "time_sleep" "wait_for_lb" {
+  depends_on = [helm_release.nginx_ingress]
+  create_duration = "120s"  # Wait 2 minutes for LB
+}
+
 data "aws_lb" "nginx_ingress" {
   tags = {
     "kubernetes.io/service-name" = "ingress-nginx/nginx-ingress-ingress-nginx-controller"
-    "kubernetes.io/cluster/${var.cluster_name}" = "owned"
-    "elbv2.k8s.aws/cluster" = var.cluster_name
+  }
+  depends_on = [time_sleep.wait_for_lb]  # Wait for the delay
+}
+
+data "aws_lb" "nginx_ingress" {
+  tags = {
+    "kubernetes.io/service-name" = "ingress-nginx/nginx-ingress-ingress-nginx-controller"
   }
   depends_on = [helm_release.nginx_ingress]
 }
