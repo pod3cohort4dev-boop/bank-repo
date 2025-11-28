@@ -32,8 +32,9 @@ resource "helm_release" "nginx_ingress" {
 data "aws_lb" "nginx_ingress" {
   tags = {
     "kubernetes.io/service-name" = "ingress-nginx/nginx-ingress-ingress-nginx-controller"
+    "kubernetes.io/cluster/${var.cluster_name}" = "owned"
+    "elbv2.k8s.aws/cluster" = var.cluster_name
   }
-
   depends_on = [helm_release.nginx_ingress]
 }
 
