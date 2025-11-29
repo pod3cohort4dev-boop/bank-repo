@@ -35,12 +35,19 @@ resource "time_sleep" "wait_for_lb" {
   create_duration = "120s"
 }
 
-# Simple data source with relaxed filtering
-data "aws_lb" "nginx_ingress" {
-  tags = {
-    "kubernetes.io/service-name" = "ingress-nginx/nginx-ingress-ingress-nginx-controller"
+# Get the load balancer info from the Kubernetes service
+data "kubernetes_service" "nginx_ingress" {
+  metadata {
+    name      = "nginx-ingress-ingress-nginx-controller"
+    namespace = "ingress-nginx"
   }
-  depends_on = [time_sleep.wait_for_lb]
+  depends_on = [helm_release.nginx_ingress, time_sleep.wait_for_lb]
+}
+
+# Extract the load balancer hostname
+locals {
+  nginx_lb_hostname = length(data.kubernetes_service.nginx_ingress.status) > 0 ? 
+    data.kubernetes_service.nginx_ingress.status[0].load_balancer[0].ingress[0].hostname : null
 }
 
 resource "helm_release" "cert_manager" {
@@ -50,6 +57,7 @@ resource "helm_release" "cert_manager" {
   version    = "1.14.5"
   namespace  = "cert-manager"
   create_namespace = true
+  replace    = true
   
   values = [file("${path.module}/cert-manager-values.yaml")]
   depends_on = [helm_release.nginx_ingress]
@@ -62,6 +70,7 @@ resource "helm_release" "argocd" {
   version          = "5.51.6"
   namespace        = "argocd"
   create_namespace = true
+  replace          = true
   values = [file("${path.module}/argocd-values.yaml")]
   depends_on = [helm_release.nginx_ingress, helm_release.cert_manager]
 }
