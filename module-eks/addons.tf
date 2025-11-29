@@ -49,17 +49,27 @@ data "kubernetes_service" "nginx_ingress" {
 
 # Install cert-manager
 resource "helm_release" "cert_manager" {
-  name       = "cert-manager-new"  # Different name
+  name       = "cert-manager"
   repository = "https://charts.jetstack.io"
   chart      = "cert-manager"
   version    = "1.14.5"
-  namespace  = "cert-manager-new"  # Different namespace
+  namespace  = "cert-manager"
   create_namespace = true
+  
+  # Skip CRD installation since they already exist
+  set {
+    name  = "installCRDs"
+    value = "false"
+  }
   
   values = [file("${path.module}/cert-manager-values.yaml")]
   
   timeout = 600
   wait    = true
+  
+  # Add these to handle the existing resources
+  force_update = true
+  replace      = true
   
   depends_on = [
     helm_release.nginx_ingress,
