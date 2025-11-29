@@ -65,16 +65,3 @@ resource "helm_release" "argocd" {
   values = [file("${path.module}/argocd-values.yaml")]
   depends_on = [helm_release.nginx_ingress, helm_release.cert_manager]
 }
-
-# Debug output to see what load balancers exist
-output "debug_all_load_balancers" {
-  value = [for lb in data.aws_lbs.all.lbs : {
-    name = lb.name
-    tags = lb.tags
-    dns_name = lb.dns_name
-  }]
-}
-
-output "nginx_lb_found" {
-  value = local.nginx_lb != null ? "Found: ${local.nginx_lb.dns_name}" : "No nginx load balancer found"
-}
