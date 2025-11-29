@@ -37,6 +37,8 @@ resource "time_sleep" "wait_for_lb" {
 
 # Get the load balancer info from the Kubernetes service
 data "kubernetes_service" "nginx_ingress" {
+  provider = kubernetes.eks 
+  
   metadata {
     name      = "nginx-ingress-ingress-nginx-controller"
     namespace = "ingress-nginx"
