@@ -44,10 +44,9 @@ data "kubernetes_service" "nginx_ingress" {
   depends_on = [helm_release.nginx_ingress, time_sleep.wait_for_lb]
 }
 
-# Extract the load balancer hostname
+# Simple local - let the outputs handle the null case
 locals {
-  nginx_lb_hostname = length(data.kubernetes_service.nginx_ingress.status) > 0 ? 
-    data.kubernetes_service.nginx_ingress.status[0].load_balancer[0].ingress[0].hostname : null
+  nginx_lb_hostname = try(data.kubernetes_service.nginx_ingress.status[0].load_balancer[0].ingress[0].hostname, null)
 }
 
 resource "helm_release" "cert_manager" {
