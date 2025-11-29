@@ -59,7 +59,24 @@ resource "helm_release" "cert_manager" {
   replace    = true
   
   values = [file("${path.module}/cert-manager-values.yaml")]
-  depends_on = [helm_release.nginx_ingress]
+  
+  timeout = 600
+  wait    = true
+  
+  # Make sure nginx ingress is fully ready first
+  depends_on = [
+    helm_release.nginx_ingress,
+    time_sleep.wait_for_ingress
+  ]
+  
+  # Set atomic to true for better rollback on failure
+  atomic = true
+}
+
+# Add a wait after cert-manager installation
+resource "time_sleep" "wait_for_cert_manager" {
+  depends_on = [helm_release.cert_manager]
+  create_duration = "30s"
 }
 
 resource "helm_release" "argocd" {
@@ -71,5 +88,6 @@ resource "helm_release" "argocd" {
   create_namespace = true
   replace          = true
   values = [file("${path.module}/argocd-values.yaml")]
-  depends_on = [helm_release.nginx_ingress, helm_release.cert_manager]
+ 
+  depends_on = [helm_release.nginx_ingress, time_sleep.wait_for_cert_manager]
 }
