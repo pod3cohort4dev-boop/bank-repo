@@ -56,12 +56,6 @@ resource "helm_release" "cert_manager" {
   namespace  = "cert-manager"
   create_namespace = true
   
-  # Skip CRD installation since they already exist
-  set {
-    name  = "installCRDs"
-    value = "false"
-  }
-  
   values = [file("${path.module}/cert-manager-values.yaml")]
   
   timeout = 600

@@ -10,6 +10,7 @@ resources:
     memory: 512Mi
 
 startupapicheck:
+  enabled: true
   timeout: 5m
   extraArgs:
     - --timeout=5m
