@@ -32,21 +32,21 @@ resource "helm_release" "nginx_ingress" {
 # Add delay for load balancer creation
 resource "time_sleep" "wait_for_lb" {
   depends_on = [helm_release.nginx_ingress]
-  create_duration = "120s"  # Wait 2 minutes for LB
+  create_duration = "120s"
 }
 
-data "aws_lb" "nginx_ingress" {
-  tags = {
-    "kubernetes.io/service-name" = "ingress-nginx/nginx-ingress-ingress-nginx-controller"
-  }
-  depends_on = [time_sleep.wait_for_lb]  # Wait for the delay
+# Get ALL load balancers (plural) - ONLY ONE DATA SOURCE!
+data "aws_lbs" "all" {
+  depends_on = [time_sleep.wait_for_lb]
 }
 
-data "aws_lb" "nginx_ingress" {
-  tags = {
-    "kubernetes.io/service-name" = "ingress-nginx/nginx-ingress-ingress-nginx-controller"
-  }
-  depends_on = [helm_release.nginx_ingress]
+# Filter for nginx ingress load balancer
+locals {
+  # Filter for nginx ingress load balancers
+  nginx_lbs = [for lb in data.aws_lbs.all.lbs : lb if can(lb.tags["kubernetes.io/service-name"]) && lb.tags["kubernetes.io/service-name"] == "ingress-nginx/nginx-ingress-ingress-nginx-controller"]
+  
+  # Use first found or null if none
+  nginx_lb = length(local.nginx_lbs) > 0 ? local.nginx_lbs[0] : null
 }
 
 resource "helm_release" "cert_manager" {
@@ -57,9 +57,7 @@ resource "helm_release" "cert_manager" {
   namespace  = "cert-manager"
   create_namespace = true
   
-  # Use values file instead of set block
   values = [file("${path.module}/cert-manager-values.yaml")]
-  
   depends_on = [helm_release.nginx_ingress]
 }
 
@@ -72,4 +70,17 @@ resource "helm_release" "argocd" {
   create_namespace = true
   values = [file("${path.module}/argocd-values.yaml")]
   depends_on = [helm_release.nginx_ingress, helm_release.cert_manager]
+}
+
+# Debug output to see what load balancers exist
+output "debug_all_load_balancers" {
+  value = [for lb in data.aws_lbs.all.lbs : {
+    name = lb.name
+    tags = lb.tags
+    dns_name = lb.dns_name
+  }]
+}
+
+output "nginx_lb_found" {
+  value = local.nginx_lb != null ? "Found: ${local.nginx_lb.dns_name}" : "No nginx load balancer found"
 }
