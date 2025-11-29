@@ -26,7 +26,10 @@ resource "helm_release" "nginx_ingress" {
   create_namespace = true
 
   values = [file("${path.module}/nginx-ingress-values.yaml")]
-  depends_on = [aws_eks_node_group.eks_node_group]
+  depends_on = [
+  aws_eks_node_group.eks_node_group
+  aws_eks_cluster.eks
+  ]
 }
 
 # Add delay for load balancer creation
