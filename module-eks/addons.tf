@@ -17,6 +17,7 @@ data "aws_eks_cluster_auth" "eks" {
   name = aws_eks_cluster.eks.name
 }
 
+# Install nginx ingress
 resource "helm_release" "nginx_ingress" {
   name       = "nginx-ingress"
   repository = "https://kubernetes.github.io/ingress-nginx"
@@ -26,29 +27,27 @@ resource "helm_release" "nginx_ingress" {
   create_namespace = true
 
   values = [file("${path.module}/nginx-ingress-values.yaml")]
-  depends_on = [
-  aws_eks_node_group.eks_node_group,
-  aws_eks_cluster.eks
-  ]
+  depends_on = [aws_eks_node_group.eks_node_group]
 }
 
-# Add delay for load balancer creation
-resource "time_sleep" "wait_for_lb" {
+# Wait for ingress to be ready
+resource "time_sleep" "wait_for_ingress" {
   depends_on = [helm_release.nginx_ingress]
   create_duration = "120s"
 }
 
 # Get the load balancer info from the Kubernetes service
 data "kubernetes_service" "nginx_ingress" {
-  provider = kubernetes.eks 
+  provider = kubernetes.eks
   
   metadata {
-    name      = "nginx-ingress-ingress-nginx-controller"
+    name      = "nginx-ingress-controller"
     namespace = "ingress-nginx"
   }
-  depends_on = [helm_release.nginx_ingress, time_sleep.wait_for_lb]
+  depends_on = [time_sleep.wait_for_ingress]
 }
 
+# Install cert-manager
 resource "helm_release" "cert_manager" {
   name       = "cert-manager"
   repository = "https://charts.jetstack.io"
@@ -56,29 +55,25 @@ resource "helm_release" "cert_manager" {
   version    = "1.14.5"
   namespace  = "cert-manager"
   create_namespace = true
-  replace    = true
   
   values = [file("${path.module}/cert-manager-values.yaml")]
   
   timeout = 600
   wait    = true
   
-  # Make sure nginx ingress is fully ready first
   depends_on = [
     helm_release.nginx_ingress,
     time_sleep.wait_for_ingress
   ]
-  
-  # Set atomic to true for better rollback on failure
-  atomic = true
 }
 
-# Add a wait after cert-manager installation
+# Wait for cert-manager to be ready
 resource "time_sleep" "wait_for_cert_manager" {
   depends_on = [helm_release.cert_manager]
   create_duration = "30s"
 }
 
+# Install ArgoCD
 resource "helm_release" "argocd" {
   name             = "argocd"
   repository       = "https://argoproj.github.io/argo-helm"
@@ -86,8 +81,15 @@ resource "helm_release" "argocd" {
   version          = "5.51.6"
   namespace        = "argocd"
   create_namespace = true
-  replace          = true
   values = [file("${path.module}/argocd-values.yaml")]
- 
-  depends_on = [helm_release.nginx_ingress, time_sleep.wait_for_cert_manager]
+  
+  depends_on = [
+    helm_release.nginx_ingress,
+    time_sleep.wait_for_cert_manager
+  ]
+}
+
+# Output the load balancer hostname
+output "nginx_ingress_lb_hostname" {
+  value = try(data.kubernetes_service.nginx_ingress.status.0.load_balancer.0.ingress.0.hostname, "Load balancer not ready yet")
 }
