@@ -35,18 +35,12 @@ resource "time_sleep" "wait_for_lb" {
   create_duration = "120s"
 }
 
-# Get ALL load balancers (plural) - ONLY ONE DATA SOURCE!
-data "aws_lbs" "all" {
+# Simple data source with relaxed filtering
+data "aws_lb" "nginx_ingress" {
+  tags = {
+    "kubernetes.io/service-name" = "ingress-nginx/nginx-ingress-ingress-nginx-controller"
+  }
   depends_on = [time_sleep.wait_for_lb]
-}
-
-# Filter for nginx ingress load balancer
-locals {
-  # Filter for nginx ingress load balancers
-  nginx_lbs = [for lb in data.aws_lbs.all.lbs : lb if can(lb.tags["kubernetes.io/service-name"]) && lb.tags["kubernetes.io/service-name"] == "ingress-nginx/nginx-ingress-ingress-nginx-controller"]
-  
-  # Use first found or null if none
-  nginx_lb = length(local.nginx_lbs) > 0 ? local.nginx_lbs[0] : null
 }
 
 resource "helm_release" "cert_manager" {
