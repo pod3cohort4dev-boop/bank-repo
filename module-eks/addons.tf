@@ -49,11 +49,11 @@ data "kubernetes_service" "nginx_ingress" {
 
 # Install cert-manager
 resource "helm_release" "cert_manager" {
-  name       = "cert-manager"
+  name       = "cert-manager-new"  # Different name
   repository = "https://charts.jetstack.io"
   chart      = "cert-manager"
   version    = "1.14.5"
-  namespace  = "cert-manager"
+  namespace  = "cert-manager-new"  # Different namespace
   create_namespace = true
   
   values = [file("${path.module}/cert-manager-values.yaml")]
