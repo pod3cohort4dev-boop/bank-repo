@@ -1,1 +1,21 @@
+# cert-manager-values.yaml
 installCRDs: true
+
+# Resource limits to prevent OOM issues
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Startup probes with longer timeouts
+startupapicheck:
+  timeout: 5m
+  extraArgs:
+    - --timeout=5m
+
+# Webhook configuration with longer timeouts
+webhook:
+  timeoutSeconds: 30
